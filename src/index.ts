@@ -112,7 +112,7 @@ app.get("/cron", async (c) => {
   return c.json({ data: results.filter(Boolean) });
 });
 
-const port = 3000;
+const port = Number(process.env.PORT) ?? 3000;
 console.log(`Server is running on port ${port}`);
 
 serve({

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://biomejs.dev/schemas/1.8.2/schema.json",
+  "files": {
+    "ignore": [".next/**", "node_modules/**", "prisma/**", "public/**", ".idx/**"]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100,
+    "attributePosition": "auto"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "complexity": {
+        "noBannedTypes": "error",
+        "noUselessThisAlias": "error",
+        "noUselessTypeConstraint": "error",
+        "useLiteralKeys": "error",
+        "useOptionalChain": "error",
+        "noUselessCatch": "error",
+        "noUselessTernary": "error",
+        "noUselessFragments": "error",
+        "noUselessEmptyExport": "error",
+        "useArrowFunction": "error",
+        "useSimplifiedLogicExpression": "error"
+      },
+      "correctness": {
+        "noChildrenProp": "error",
+        "noVoidElementsWithChildren": "error",
+        "noPrecisionLoss": "error",
+        "noUnusedVariables": "error",
+        "useArrayLiterals": "error",
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "error",
+        "useJsxKeyInIterable": "error",
+        "noUnusedImports": "error",
+        "useYield": "error",
+        "noConstAssign": "error",
+        "noSelfAssign": "error",
+        "noEmptyPattern": "error",
+        "noRenderReturnValue": "error"
+      },
+      "style": {
+        "useShorthandAssign": "error",
+        "noInferrableTypes": "error",
+        "useAsConstAssertion": "error",
+        "useConsistentArrayType": "off",
+        "useForOf": "error",
+        "useImportType": "error",
+        "useShorthandFunctionType": "error",
+        "useExportType": "error",
+        "noArguments": "error",
+        "noVar": "error",
+        "useConst": "error",
+        "noUselessElse": "error"
+      },
+      "suspicious": {
+        "noDuplicateObjectKeys": "error",
+        "useValidTypeof": "error",
+        "noEmptyBlockStatements": "error",
+        "noEmptyInterface": "error",
+        "noExplicitAny": "error",
+        "noMisleadingInstantiator": "error",
+        "noUnsafeDeclarationMerging": "error",
+        "useAwait": "off",
+        "noDoubleEquals": "error",
+        "noSparseArray": "error"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "error",
+          "fix": "safe",
+          "options": {
+            "attributes": ["classList"],
+            "functions": ["clsx", "cva", "tw"]
+          }
+        }
+      }
+    }
+  },
+  "organizeImports": { "enabled": true }
+}

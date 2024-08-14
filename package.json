@@ -1,0 +1,29 @@
+{
+  "name": "app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "@vercel/functions": "^1.4.0",
+    "axios": "^1.7.3",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.33.0",
+    "hono": "^4.5.5",
+    "imagekit": "^5.1.0",
+    "nanoid": "^5.0.7",
+    "p-limit": "^6.1.0",
+    "postgres": "^3.4.4",
+    "superjson": "^2.2.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "@types/uuid": "^10.0.0",
+    "drizzle-kit": "^0.24.0",
+    "tsx": "^4.7.1"
+  }
+}

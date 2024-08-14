@@ -1,0 +1,165 @@
+import type { AfreecaTvApiResponse } from "./response";
+
+export type AfreecaTVVod = AfreecaTvApiResponse<Vod>;
+
+export type Vod = {
+  clip_seek_time: number;
+  copyright?: Copyright;
+  station_no: number;
+  bbs_no: number;
+  writer_id: string;
+  board_type: number;
+  notice_yn: number;
+  share_yn: number;
+  comment_yn: number;
+  auth_no: number;
+  title: string;
+  bj_id: string;
+  bbs_title: string;
+  display_auth_no: number;
+  title_no: number;
+  full_title: string;
+  writer_nick: string;
+  content: string;
+  grade: number;
+  thumb: string;
+  flag: string;
+  ucc_type: string;
+  total_file_duration: number;
+  file_bps: number;
+  file_resolution: string;
+  file_type: string;
+  show_starballoon: string;
+  show_chat: string;
+  permanence: string;
+  enable_gift: number;
+  broad_idx: number;
+  region_type: number;
+  water_mark: number;
+  hashtags: string;
+  paid_promotion: number;
+  auto_hashtags: string[];
+  memo_cnt: number;
+  view_cnt: number;
+  recommend_cnt: number;
+  ucc_favorite_cnt: number;
+  category_tags: string[];
+  write_tm: string;
+  write_timestamp: number;
+  auto_delete_date: Date;
+  category: string;
+  vod_category: string;
+  sub_upload_type: string;
+  is_public: number;
+  is_show_nft: boolean;
+  is_nft_contents: boolean;
+  is_ppv: boolean;
+  is_paid: boolean;
+  is_deletable: string;
+  is_best_partner_review: string;
+  quickview: string;
+  is_review_clip: string;
+  live_total_view: number;
+  broad_start: Date;
+  broad_no: null;
+  chat_duration: number;
+  is_modify: string;
+  videoballoon_cnt: number;
+  original_vod: number | null;
+  fullbtn_case: number;
+  catch_story_scheme: string;
+  catch_story_idx: number;
+  catch_story_title_no: number;
+  files: File[];
+  vod_seek_time: number;
+  subscribed: boolean;
+  active_subscription: boolean;
+  preroll_showyn: boolean;
+  midroll_showyn: boolean;
+  midroll_point_second: number[];
+  midroll_no_reason: string;
+  midroll_setting_type: string;
+  uniquePathKey: string;
+  gift_starballoon: boolean;
+  category_name: string;
+  default_bitrate: number;
+  default_quality: string;
+  share: Share;
+  is_later_view: boolean;
+  station_logo: string;
+  is_manager: boolean;
+  manager_list: string[];
+  adballoon: Adballoon;
+  hash_tags: string[];
+  subscription_personalcon: null;
+  is_gem: boolean;
+  adult_status: string;
+  media_exception: MediaException;
+  lang: string;
+  country: string;
+  is_recommend: boolean;
+  is_copyright_like: boolean;
+  clearmode_category: string[];
+};
+
+type Adballoon = {
+  is_premium: boolean;
+  load: null;
+  icon_url: string;
+  title: string;
+  url: string;
+  list_url: string;
+  banner_type: string;
+  message: null;
+  user_nick: string;
+  campaign_no: number;
+};
+
+export type File = {
+  idx: number;
+  grade: number;
+  hide: string;
+  duration: number;
+  file_order: number;
+  file: string;
+  file_type: string;
+  file_info_key: string;
+  file_start: Date;
+  mp4_path: string;
+  snapshot: string;
+  honeyjam: number[];
+  quality: string[];
+  quality_files: string[];
+  quality_info: QualityInfo[];
+  radio_url: string;
+  chat: string;
+};
+
+export type QualityInfo = {
+  label: string;
+  resolution: string;
+  bitrate: string;
+  file: string;
+  name: string;
+};
+
+type MediaException = {
+  code: number;
+  msg: string;
+};
+
+type Share = {
+  url: string;
+  facebook: string;
+  twitter: string;
+  me2day: string;
+};
+
+type Copyright = {
+  del_date: Date | null;
+  del_flag: "N" | "Y";
+  del_reg_date: Date | null;
+  logo: string;
+  user_id: string;
+  user_nick: string;
+};

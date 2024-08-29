@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
-import pLimit from "p-limit";
 import { afreecaTvApiServices } from "./afreecatv/afreecatv-api-service";
 import { db } from "./database/drizzle/client";
 import { createChannel } from "./database/drizzle/services/channel/create-channel";
@@ -9,8 +8,6 @@ import { createVideo } from "./database/drizzle/services/video/create-video";
 import { hmsToSeconds } from "./libs/utils";
 
 const app = new Hono();
-
-const MAX_CONCURRENT_UPLOADS = 10;
 
 const isVideoExist = async (videoId: number) => {
   const isVid = await db.query.video.findFirst({
@@ -62,54 +59,50 @@ app.get("/", async (c) => {
 });
 
 app.get("/cron", async (c) => {
-  console.log("Find cookies");
+  try {
+    console.log("Find cookies");
+    const platform = await db.query.platform.findFirst({
+      where: (pl, { eq }) => eq(pl.name, "afreecatv"),
+    });
 
-  const platform = await db.query.platform.findFirst({
-    where: (pl, { eq }) => eq(pl.name, "afreecatv"),
-  });
+    if (!platform?.cookies) {
+      console.log("Done.");
+      return c.json({ error: "Cookies not found" });
+    }
 
-  if (!platform?.cookies) {
+    console.log("Get replays");
+    const replay = await afreecaTvApiServices.replay(platform.cookies);
+
+    if (!replay.data.length) {
+      console.log("Done.");
+      return c.json({ data: null, error: "Videos not found" });
+    }
+
+    console.log("Filtering replays");
+    const filteredData = replay.data.filter((d) => hmsToSeconds(d.duration) >= 900);
+
+    console.log("isVideoExists");
+    const isVideoExists = await Promise.all(
+      filteredData.map((video) => isVideoExist(video.title_no)),
+    );
+
+    console.log("Filtering isVideoExists");
+    const filtered = isVideoExists.filter(Boolean) as number[];
+
+    if (!filtered.length) {
+      console.log("Done.");
+      return c.json({ data: null, error: "all good" });
+    }
+
+    console.log("Working promises");
+    const results = await Promise.all(filtered.map(addVideo));
+
     console.log("Done.");
-    return c.json({ error: "Cookies not found" });
+    return c.json({ data: results.filter(Boolean) });
+  } catch (error) {
+    console.log("🚀 ~ app.get ~ error:", error);
+    return c.json({ data: "Something went wrong" });
   }
-
-  console.log("Get replays");
-  const replay = await afreecaTvApiServices.replay(platform.cookies);
-
-  if (!replay.data.length) {
-    console.log("Done.");
-    return c.json({ data: null, error: "Videos not found" });
-  }
-
-  console.log("Filtering replays");
-  const filteredData = replay.data.filter((d) => hmsToSeconds(d.duration) >= 900);
-
-  console.log("isVideoExists");
-  const isVideoExists = await Promise.all(
-    filteredData.map((video) => isVideoExist(video.title_no)),
-  );
-
-  console.log("Filtering isVideoExists");
-  const filtered = isVideoExists.filter(Boolean) as number[];
-
-  if (!filtered.length) {
-    console.log("Done.");
-    return c.json({ data: null, error: "all good" });
-  }
-
-  const limit = pLimit(MAX_CONCURRENT_UPLOADS);
-  const uploadPromises = [];
-
-  console.log("Pushing promises");
-  for (const id of filtered) {
-    uploadPromises.push(limit(() => addVideo(id)));
-  }
-
-  console.log("Working promises");
-  const results = await Promise.all(uploadPromises);
-
-  console.log("Done.");
-  return c.json({ data: results.filter(Boolean) });
 });
 
 const port = Number(process.env.PORT) ?? 3000;

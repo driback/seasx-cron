@@ -99,13 +99,6 @@ export const socialLinksRelations = relations(socialLinks, ({ one }) => ({
   }),
 }));
 
-export const videoPlaybackSourceRelations = relations(videoPlaybackSource, ({ one }) => ({
-  video: one(video, {
-    fields: [videoPlaybackSource.videoId],
-    references: [video.id],
-  }),
-}));
-
 export const videoTimeStampRelations = relations(videoTimeStamp, ({ one }) => ({
   videoTimeStamp: one(videoTimeStamps, {
     fields: [videoTimeStamp.videoTimeStampsId],

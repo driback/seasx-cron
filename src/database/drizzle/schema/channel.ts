@@ -1,5 +1,6 @@
 import { boolean, index, integer, jsonb, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { pgTable } from "drizzle-orm/pg-core";
+import { nanoid } from "nanoid";
 import { v4 } from "uuid";
 import { platform } from "./platform";
 import type { Thumbnail } from "./video";
@@ -63,7 +64,7 @@ export const channelBanner = pgTable(
 export const socialLinks = pgTable("social_links", {
   id: text("id")
     .primaryKey()
-    .$defaultFn(() => v4())
+    .$defaultFn(() => nanoid(10))
     .notNull(),
   name: varchar("name", { length: 256 }).notNull(),
   link: varchar("link", { length: 256 }).notNull(),

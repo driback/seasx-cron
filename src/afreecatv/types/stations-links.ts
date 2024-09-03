@@ -2,6 +2,7 @@ export type AfreecaTVStationsLinks = {
   medals: Medal[];
   links: Link[];
   channelart: Channelart;
+  code?: number;
 };
 
 type Channelart = {
@@ -12,7 +13,7 @@ type Channelart = {
   palettes: string[];
 };
 
-export type Link = {
+type Link = {
   no: number;
   type: number;
   link_name: string;

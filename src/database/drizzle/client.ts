@@ -2,6 +2,10 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./schema";
 
+declare global {
+  var __dbConn: postgres.Sql | undefined;
+}
+
 const createConnection = () => postgres(process.env.DATABASE_URL ?? "", { max: 1 });
 
 const conn = createConnection();

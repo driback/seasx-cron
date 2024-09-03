@@ -4,7 +4,6 @@ import type { AfreecaTVAres } from "./types/ares";
 import type { AfreecaTVAresX, AresxInput } from "./types/aresx";
 import type { AfreecaTVBj } from "./types/bj";
 import type { AfreecaTVClipCatch, ClipCatchInput } from "./types/cilp-catch";
-import type { AfreecaTVLive } from "./types/live";
 import type { AfreecaTVReplay } from "./types/replay";
 import type { AfreecaTVSearchVideo } from "./types/search-video";
 import type { AfreecaTVStation } from "./types/station";
@@ -25,7 +24,7 @@ export class AfreecaTvApiServices {
     return await axios.get<T>(path, options);
   };
 
-  private postRequest = async <T>(path: string, data: BodyInit, cookies?: string) => {
+  private postRequest = async <T>(path: string, data: unknown, cookies?: string) => {
     const headersList = {
       Accept: "application/json, text/plain, */*",
       "Content-Type": "application/x-www-form-urlencoded",
@@ -60,34 +59,33 @@ export class AfreecaTvApiServices {
       szBjId: stationId,
     });
 
-    const res = await this.postRequest<AfreecaTVBj>(
+    const res = await this.postRequest<AfreecaTVBj | null>(
       "https://st.afreecatv.com/api/get_station_status.php",
       params,
     );
+
+    if (res.status !== 200) return null;
 
     return res.data;
   }
 
   async station(stationId: string) {
-    try {
-      const res = await this.getRequest<AfreecaTVStation>(
-        `https://bjapi.afreecatv.com/api/${stationId}/station`,
-      );
+    const res = await this.getRequest<AfreecaTVStation | null>(
+      `https://bjapi.afreecatv.com/api/${stationId}/station`,
+    );
 
-      return { data: res.data };
-    } catch (error) {
-      if (error instanceof Error) {
-        const status = error.message.match(/Status: (\d+)/)![1]!;
-        return { error: error.message, status: +status };
-      }
-      return { error: "Something went wrong", status: 500 };
-    }
+    if (res.status !== 200) return null;
+
+    return res.data;
   }
 
   async stationLinks(stationId: string) {
     const res = await this.getRequest<AfreecaTVStationsLinks>(
       `https://bjapi.afreecatv.com/api/${stationId}/station/bj`,
     );
+
+    if (res.data.code) return null;
+
     return res.data;
   }
 
@@ -106,9 +104,11 @@ export class AfreecaTvApiServices {
       months: props.months,
     });
 
-    const res = await this.getRequest<AfreecaTVStationsVods>(
+    const res = await this.getRequest<AfreecaTVStationsVods | null>(
       `https://bjapi.afreecatv.com/api/${stationId}/vods/${slug}?${params.toString()}`,
     );
+
+    if (res.status !== 200) return null;
 
     return res.data;
   }
@@ -121,11 +121,13 @@ export class AfreecaTvApiServices {
         nPlaylistIdx: "0",
       });
 
-      const res = await this.postRequest<AfreecaTVVod>(
+      const res = await this.postRequest<AfreecaTVVod | null>(
         "https://api.m.afreecatv.com/station/video/a/view",
         params,
         cookies,
       );
+
+      if (res.status !== 200) return null;
 
       return res.data;
     } catch (error) {
@@ -135,18 +137,13 @@ export class AfreecaTvApiServices {
   }
 
   async replay(cookies: string) {
-    const res = await this.getRequest<AfreecaTVReplay>(
+    const res = await this.getRequest<AfreecaTVReplay | null>(
       `https://myapi.afreecatv.com/api/favorite/vod`,
       cookies,
     );
-    return res.data;
-  }
 
-  async live(cookies: string) {
-    const res = await this.getRequest<AfreecaTVLive>(
-      `https://myapi.afreecatv.com/api/favorite`,
-      cookies,
-    );
+    if (res.status !== 200) return null;
+
     return res.data;
   }
 
@@ -159,11 +156,13 @@ export class AfreecaTvApiServices {
       szOrder: props.sort,
     });
 
-    const res = await this.postRequest<AfreecaTVClipCatch>(
+    const res = await this.postRequest<AfreecaTVClipCatch | null>(
       "https://stbbs.afreecatv.com/api/get_vod_list.php",
       params,
       cookies,
     );
+
+    if (res.status !== 200) return null;
 
     return res.data;
   }
@@ -176,11 +175,14 @@ export class AfreecaTvApiServices {
       nLimit: String(props.offset),
     });
 
-    const res = await this.postRequest<AfreecaTVAres>(
+    const res = await this.postRequest<AfreecaTVAres | null>(
       "https://stbbs.afreecatv.com/api/vod_list_controller.php",
       params,
       cookies,
     );
+
+    if (res.status !== 200) return null;
+
     return res.data;
   }
 
@@ -196,10 +198,12 @@ export class AfreecaTvApiServices {
       szCateNo: "00030000",
     });
 
-    const res = await this.getRequest<AfreecaTVAresX>(
+    const res = await this.getRequest<AfreecaTVAresX | null>(
       `https://sch.afreecatv.com/api.php?${params.toString()}`,
       cookies,
     );
+
+    if (res.status !== 200) return null;
 
     return res.data;
   }
@@ -222,12 +226,14 @@ export class AfreecaTvApiServices {
       tab: "vod",
     });
 
-    const response = await this.postRequest<AfreecaTVSearchVideo>(
+    const res = await this.postRequest<AfreecaTVSearchVideo | null>(
       "https://sch.afreecatv.com/api.php",
       params,
     );
 
-    return response.data;
+    if (res.status !== 200) return null;
+
+    return res.data;
   }
 }
 
@@ -237,7 +243,7 @@ type SearchVideoInput = {
   page: number;
   offset: number;
   time: "1day" | "1week" | "1month" | "1year" | "all";
-  type: "ALL" | "REVIEW" | "CLIP" | "CATCH" | "PLAYLIST" | "NORMAL";
+  type: "ALL" | "REVIEW" | "CLIP" | "CATCH" | "PLAYLIST" | "NORMAL" | "HIGHLIGHT";
 };
 
 type StationVodsProps = {

@@ -11,6 +11,7 @@ import {
   videoPlaybackSource,
   videoTimeStamp,
   videoTimeStamps,
+  videoWatched,
 } from ".";
 
 export const platformRelations = relations(platform, ({ many }) => ({
@@ -89,6 +90,10 @@ export const videoRelations = relations(video, ({ one, many }) => ({
   }),
   videoPlaybackSources: one(videoPlaybackSource),
   videoTimeStamps: many(videoTimeStamps),
+  videoWatch: one(videoWatched, {
+    fields: [video.id],
+    references: [videoWatched.id],
+  }),
   collectionItem: many(collectionItem),
 }));
 
@@ -96,6 +101,13 @@ export const socialLinksRelations = relations(socialLinks, ({ one }) => ({
   channel: one(channel, {
     fields: [socialLinks.channelId],
     references: [channel.id],
+  }),
+}));
+
+export const videoPlaybackSourceRelations = relations(videoPlaybackSource, ({ one }) => ({
+  video: one(video, {
+    fields: [videoPlaybackSource.videoId],
+    references: [video.id],
   }),
 }));
 
@@ -110,6 +122,13 @@ export const videoTimeStampsRelations = relations(videoTimeStamps, ({ one, many 
   videoTimeStamps: many(videoTimeStamp),
   video: one(video, {
     fields: [videoTimeStamps.videoId],
+    references: [video.id],
+  }),
+}));
+
+export const videoWatchedRelation = relations(videoWatched, ({ one }) => ({
+  video: one(video, {
+    fields: [videoWatched.videoId],
     references: [video.id],
   }),
 }));

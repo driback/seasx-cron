@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import { nanoid } from "nanoid";
 import { v4 } from "uuid";
 import { channel } from "./channel";
 import { platform } from "./platform";
@@ -34,7 +35,7 @@ export const video = pgTable(
       .primaryKey()
       .$defaultFn(() => v4())
       .notNull(),
-    videoId: integer("video_id").notNull(),
+    videoId: text("video_id").notNull(),
     title: text("title").notNull(),
     duration: integer("duration").notNull(),
     originalPublishDate: timestamp("original_publish_date", {
@@ -139,3 +140,15 @@ export const videoTimeStamps = pgTable(
     };
   },
 );
+
+export const videoWatched = pgTable("video_watched", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => nanoid())
+    .notNull(),
+  videoId: text("video_id")
+    .notNull()
+    .references(() => video.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  latestWatch: timestamp("create_at", { precision: 3, mode: "date" }).defaultNow().notNull(),
+  createAt: timestamp("create_at", { precision: 3, mode: "date" }).defaultNow().notNull(),
+});

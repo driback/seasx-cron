@@ -1,9 +1,9 @@
 import { createafreecaTvChannel } from "./create-afreecatv-channel.helper";
 import { createAfreecaTvVideo } from "./create-afreecatv-video.helper";
 
-export const addAfreecaTvVideo = async (videoId: string) => {
+export const addAfreecaTvVideo = async (props: Parameters<typeof createAfreecaTvVideo>[0]) => {
   try {
-    const nvideo = await createAfreecaTvVideo(videoId);
+    const nvideo = await createAfreecaTvVideo(props);
 
     if (!(nvideo.success || nvideo.data)) {
       return { success: false, message: "Failed to add vod" };
@@ -13,7 +13,7 @@ export const addAfreecaTvVideo = async (videoId: string) => {
 
     while (!nvideo.success && nvideo.data && MAX_RETRIES > 0) {
       await createafreecaTvChannel(nvideo.data.channelId!);
-      const add = await createAfreecaTvVideo(videoId);
+      const add = await createAfreecaTvVideo(props);
 
       if (add.success) break;
 
@@ -26,7 +26,7 @@ export const addAfreecaTvVideo = async (videoId: string) => {
 
     return {
       success: true,
-      message: `Vod with id ${videoId} succesfully add to db`,
+      message: `Vod with id ${props.title_no} succesfully add to db`,
     };
   } catch (error) {
     console.log("🚀 ~ addVideo ~ error:", error);

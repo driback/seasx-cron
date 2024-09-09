@@ -1,8 +1,7 @@
 import { waitUntil } from "@vercel/functions";
 import { sql } from "drizzle-orm";
 import { stringify } from "superjson";
-import { afreecaTvApiServices } from "~/afreecatv/afreecatv-api-service";
-import { db } from "~/database/drizzle/client";
+import type { AfreecaTVVod } from "~/afreecatv/types/vod";
 import {
   findChannelByChannelId,
   updateChannelById,
@@ -19,41 +18,20 @@ import {
 import { buildAfreecaTvPlaybackResource, buildTempThumbnail } from "~/libs/utils";
 import { createThumbnailBg } from "./create-tumbnail.helper";
 
-export const createAfreecaTvVideo = async (videoId: string) => {
-  console.log("🚀 ~ createAfreecaTvVideo ~ videoId:", videoId);
+export const createAfreecaTvVideo = async (data: Extract<AfreecaTVVod, { result: 1 }>["data"]) => {
+  console.log("🚀 ~ createAfreecaTvVideo ~ videoId:", data.title_no);
   try {
     console.log("vodInfo: get vod from afreecatv");
     const platform = await findPlatformByName("afreecatv");
-    if (!platform?.cookies) return { success: false, data: null };
-
-    const vod = await afreecaTvApiServices.vod(videoId, platform.cookies);
-    if (!vod || vod.result !== 1) {
-      console.log("vodInfo: error", vod);
-      return { success: false, data: null };
-    }
-
-    const { data } = vod;
-
-    if (data.flag !== "SUCCEED") {
-      console.log("🚀 ~ .mutation ~ data.flag:", data.flag);
-      return { success: false, data: null };
-    }
-
-    if (!data.files.length) {
-      return { success: false, data: null };
-    }
+    if (!platform) return { success: false, data: null };
 
     const channel = await findChannelByChannelId(data.bj_id);
-
-    if (!channel) {
-      return { success: false, data: { channelId: data.bj_id } };
-    }
+    if (!channel) return { success: false, data: { channelId: data.bj_id } };
 
     const vodDate = data.write_tm.split("~").at(-1) ?? "";
     const oriDate = new Date(vodDate);
 
     console.log("add: add vod to db");
-
     const newVod = await insertVideo([
       {
         videoId: `${data.title_no}`,
@@ -83,19 +61,11 @@ export const createAfreecaTvVideo = async (videoId: string) => {
       },
     ]);
 
-    await updateVideoById(newVod.id, { totalPart: all.length });
-
-    await updateChannelById(channel.id, { totalVideos: sql`${channel.totalVideos} + 1` });
-
-    await updatePlatformById(platform.id, {
-      totalVideos: sql`${platform.totalVideos} + 1`,
-    });
-
-    const v = await db.query.video.findFirst({
-      where: (vid, { eq }) => eq(vid.id, newVod.id),
-      columns: { videoId: true },
-      with: { channel: { columns: { channelId: true } } },
-    });
+    const [_v, _c, _p] = await Promise.all([
+      updateVideoById(newVod.id, { totalPart: all.length }),
+      updateChannelById(channel.id, { totalVideos: sql`${channel.totalVideos} + 1` }),
+      updatePlatformById(platform.id, { totalVideos: sql`${platform.totalVideos} + 1` }),
+    ]);
 
     waitUntil(
       createThumbnailBg({
@@ -108,7 +78,7 @@ export const createAfreecaTvVideo = async (videoId: string) => {
 
     console.log("Done");
 
-    return { success: true, data: { videoId: v?.videoId } };
+    return { success: true, data: { videoId: newVod.videoId } };
   } catch (error) {
     console.log("🚀 ~ .mutation ~ data:", error);
     return { success: false, data: null };

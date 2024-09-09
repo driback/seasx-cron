@@ -5,6 +5,7 @@ import { db } from "~/database/drizzle/client";
 import { findPlatformByName } from "~/database/drizzle/repository/platform.repository";
 import { hmsToSeconds } from "~/libs/utils";
 import { addAfreecaTvVideo } from "./helper/add-video.helper";
+import { getAfreecaTvVideo } from "./helper/get-afreecatv-video";
 
 const isVideoExist = async (videoId: string) => {
   const isVid = await db.query.video.findFirst({
@@ -23,6 +24,7 @@ export const afreecaTvController = async <T extends string>(
   try {
     console.log("Find cookies");
     const platform = await findPlatformByName("afreecatv");
+    console.log("🚀 ~ platform:", platform);
 
     if (!platform?.cookies) {
       console.log("Done.");
@@ -53,11 +55,14 @@ export const afreecaTvController = async <T extends string>(
       return c.json({ data: null, error: "all good" });
     }
 
-    console.log("Working promises");
-    const results = await Promise.allSettled(filtered.map(addAfreecaTvVideo));
+    console.log("Get all afreecatv videos");
+    const datas = await Promise.all(filtered.map((s) => getAfreecaTvVideo(s, platform.cookies!)));
+    const filteredDatas = datas.filter((s) => s !== null);
+
+    const results = await Promise.all(filteredDatas.map(addAfreecaTvVideo));
 
     console.log("Done.");
-    return c.json({ data: results.filter((s) => s.status === "fulfilled") });
+    return c.json({ data: results });
   } catch (error) {
     console.log("🚀 ~ app.get ~ error:", error);
     return c.json({ data: "Something went wrong" });

@@ -7,64 +7,77 @@ import { hmsToSeconds } from "~/libs/utils";
 import { addAfreecaTvVideo } from "./helper/add-video.helper";
 import { getAfreecaTvVideo } from "./helper/get-afreecatv-video";
 
+const VIDEO_MIN_DURATION_SECONDS = 900;
+
 const isVideoExist = async (videoId: string) => {
-  const isVid = await db.query.video.findFirst({
+  const video = await db.query.video.findFirst({
     where: (vid, { eq }) => eq(vid.videoId, videoId),
     columns: { id: true },
   });
+  return video ? null : videoId;
+};
 
-  if (isVid) return null;
-
-  return videoId;
+const getPlatformCookies = async () => {
+  const platform = await findPlatformByName("afreecatv");
+  return platform?.cookies || null;
 };
 
 export const afreecaTvController = async <T extends string>(
   c: Context<BlankEnv, T, BlankInput>,
 ) => {
   try {
-    console.log("Find cookies");
-    const platform = await findPlatformByName("afreecatv");
-    console.log("🚀 ~ platform:", platform);
-
-    if (!platform?.cookies) {
-      console.log("Done.");
+    console.log("Fetching platform cookies...");
+    const platformCookies = await getPlatformCookies();
+    if (!platformCookies) {
+      console.error("Cookies not found");
       return c.json({ error: "Cookies not found" });
     }
 
-    console.log("Get replays");
-    const replay = await afreecaTvApiServices.replay(platform.cookies);
-
-    if (!replay) {
-      console.log("Done.");
-      return c.json({ data: null, error: "Videos not found" });
+    console.log("Fetching AfreecaTV replays...");
+    const replay = await afreecaTvApiServices.replay(platformCookies);
+    if (!replay?.data) {
+      console.error("No replays found");
+      return c.json({ error: "Videos not found" });
     }
 
-    console.log("Filtering replays");
-    const filteredData = replay.data.filter((d) => hmsToSeconds(d.duration) >= 900);
-
-    console.log("isVideoExists");
-    const isVideoExists = await Promise.all(
-      filteredData.map((video) => isVideoExist(`${video.title_no}`)),
+    console.log("Filtering replays based on duration...");
+    const validReplays = replay.data.filter(
+      (d) => hmsToSeconds(d.duration) >= VIDEO_MIN_DURATION_SECONDS,
     );
 
-    console.log("Filtering isVideoExists");
-    const filtered = isVideoExists.filter(Boolean) as string[];
-
-    if (!filtered.length) {
-      console.log("Done.");
-      return c.json({ data: null, error: "all good" });
+    if (validReplays.length === 0) {
+      console.log("No valid replays found.");
+      return c.json({ error: "No valid replays found" });
     }
 
-    console.log("Get all afreecatv videos");
-    const datas = await Promise.all(filtered.map((s) => getAfreecaTvVideo(s, platform.cookies!)));
-    const filteredDatas = datas.filter((s) => s !== null);
+    console.log("Checking for existing videos...");
+    const videoCheckPromises = validReplays.map((video) => isVideoExist(`${video.title_no}`));
+    const nonExistingVideos = (await Promise.all(videoCheckPromises)).filter(Boolean) as string[];
 
-    const results = await Promise.all(filteredDatas.map(addAfreecaTvVideo));
+    if (nonExistingVideos.length === 0) {
+      console.log("All videos already exist.");
+      return c.json({ error: "All videos already exist" });
+    }
 
-    console.log("Done.");
+    console.log("Fetching video details from AfreecaTV...");
+    const videoDataPromises = nonExistingVideos.map((videoId) =>
+      getAfreecaTvVideo(videoId, platformCookies),
+    );
+    const videoData = (await Promise.all(videoDataPromises)).filter((video) => video !== null);
+
+    if (videoData.length === 0) {
+      console.log("No new valid videos found.");
+      return c.json({ error: "No new valid videos found" });
+    }
+
+    console.log("Adding videos to the database...");
+    const addVideoPromises = videoData.map(addAfreecaTvVideo);
+    const results = await Promise.all(addVideoPromises);
+
+    console.log("Process complete.");
     return c.json({ data: results });
   } catch (error) {
-    console.log("🚀 ~ app.get ~ error:", error);
-    return c.json({ data: "Something went wrong" });
+    console.error("Error during AfreecaTV cron process:", error);
+    return c.json({ error: "Something went wrong" });
   }
 };

@@ -27,6 +27,5 @@
     "drizzle-kit": "^0.24.0",
     "esbuild": "^0.24.0",
     "tsx": "^4.7.1"
-  },
-  "packageManager": "pnpm@9.7.0"
+  }
 }

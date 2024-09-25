@@ -1,27 +1,39 @@
-FROM node:20-alpine AS base
+# Base image
+FROM node:20.10.0-slim AS base
 
-FROM base AS builder
+# Setup pnpm environment
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
 
-RUN apk add --no-cache gcompat
+# Set the working directory
 WORKDIR /app
 
-COPY package*json tsconfig.json src ./
+# Set environment variable for the application port
+ENV PORT=8000
 
-RUN npm ci && \
-    npm run build && \
-    npm prune --production
+# Prod-deps stage: install only production dependencies
+FROM base AS prod-deps
+# Leverage build cache for dependencies installation
+COPY pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
-FROM base AS runner
-WORKDIR /app
+# Build stage: install all dependencies and build the app
+FROM base AS build
+COPY pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm run build
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 hono
+# Final image: Use only the necessary files for production
+FROM base
+# Copy production dependencies
+COPY --from=prod-deps /app/node_modules ./node_modules
+# Copy build output
+COPY --from=build /app/dist ./dist
 
-COPY --from=builder --chown=hono:nodejs /app/node_modules /app/node_modules
-COPY --from=builder --chown=hono:nodejs /app/dist /app/dist
-COPY --from=builder --chown=hono:nodejs /app/package.json /app/package.json
+# Expose the port
+EXPOSE 8080
 
-USER hono
-EXPOSE 8000
-
-CMD ["node", "/app/dist/index.js"]
+# Command to start the app
+CMD ["pnpm", "start"]

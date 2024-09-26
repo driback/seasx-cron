@@ -6,7 +6,8 @@ declare global {
   var __dbConn: postgres.Sql | undefined;
 }
 
-const createConnection = () => postgres(process.env.DATABASE_URL ?? "", { max: 1 });
+const createConnection = () =>
+  postgres(process.env.DATABASE_URL ?? "", { max: 1, idle_timeout: 2 });
 
 const conn = createConnection();
 

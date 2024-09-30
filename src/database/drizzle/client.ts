@@ -7,7 +7,7 @@ declare global {
 }
 
 const createConnection = () =>
-  postgres(process.env.DATABASE_URL ?? "", { max: 1, idle_timeout: 2 });
+  postgres(process.env.DATABASE_URL ?? "", {  idle_timeout: 2 });
 
 const conn = createConnection();
 
